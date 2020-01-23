@@ -65,12 +65,19 @@ func (s *Sensor) read() (float64, error) {
 }
 
 func extract(raw string) (float64, error) {
-	i := strings.LastIndex(raw, "t=")
+	strs := strings.Split(raw, "\n")
+	if len(strs) < 2 {
+		return 0.0, ErrReadSensor
+	}
+	if !strings.HasSuffix(strings.TrimSpace(strs[0]), "YES") { // crc error
+		return 0.0, ErrReadSensor
+	}
+	i := strings.LastIndex(strs[1], "t=")
 	if i == -1 {
 		return 0.0, ErrReadSensor
 	}
 
-	td := strings.TrimSpace(raw[i+2 : len(raw)-1])
+	td := strings.TrimSpace(strs[1][i+2:])
 	if td == "85000" { // some sensor error
 		return 0.0, ErrReadSensor
 	}
